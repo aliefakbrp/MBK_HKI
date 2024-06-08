@@ -122,21 +122,21 @@ path = 'D:\kuliah\MBKM'
 path = ''
 columns = ["movie_id", "movie_title", "release_date", "video_release_date", "IMDb_URL", "unknown", "action", "adventure", "animation", "children's", "comedy", "crime", "documentary", "drama", "fantasy", "film-noir", "horror", "musical", "mystery", "romance", "sci-fi", "thriller", "war", "western"]
 movie_data = pd.read_csv(os.path.join(path, 'Datasets\ml-100k', 'u.item'), sep='|', names=columns,encoding="latin-1",index_col="movie_id")
-ratings_train_k1_old = pd.read_csv(os.path.join(path, 'Datasets/ml-100k', 'u1.base'), sep='\t', names=names)
-ratings_test_k1 = pd.read_csv(os.path.join(path, 'Datasets/ml-100k', 'u1.test'), sep='\t', names=names)
-banyak_users = np.unique(ratings_test_k1["user_id"])
-rating_matrix_k1 = pd.DataFrame(np.zeros((943, 1682)), index=list(range(1,944)), columns=list(range(1,1683))).rename_axis(index='user_id', columns="item_id")
+ratings_train_k2_old = pd.read_csv(os.path.join(path, 'Datasets/ml-100k', 'u2.base'), sep='\t', names=names)
+ratings_test_k2 = pd.read_csv(os.path.join(path, 'Datasets/ml-100k', 'u2.test'), sep='\t', names=names)
+banyak_users = np.unique(ratings_test_k2["user_id"])
+rating_matrix_k2 = pd.DataFrame(np.zeros((943, 1682)), index=list(range(1,944)), columns=list(range(1,1683))).rename_axis(index='user_id', columns="item_id")
 # train
-rating_matrix_k1_old = ratings_train_k1_old.pivot_table(index='user_id', columns='item_id', values='rating')
-rating_matrix_k1_old = rating_matrix_k1_old.fillna(0)
-rating_matrix_k1.update(rating_matrix_k1_old)
+rating_matrix_k2_old = ratings_train_k2_old.pivot_table(index='user_id', columns='item_id', values='rating')
+rating_matrix_k2_old = rating_matrix_k2_old.fillna(0)
+rating_matrix_k2.update(rating_matrix_k2_old)
 # calculate contingency matrix
 rating_matrix = pd.DataFrame(np.zeros((943, 1682)), index=list(range(1,944)), columns=list(range(1,1683))).rename_axis(index='user_id', columns="item_id")
 rating_matrix_test = pd.DataFrame(np.zeros((943, 1682)), index=list(range(1,944)), columns=list(range(1,1683))).rename_axis(index='user_id', columns="item_id")
 
 # load dataset k-fold, train dan test
-ratings_train = pd.read_csv(os.path.join(path, f'Datasets/ml-100k/u1.base'), sep='\t', names=names)
-ratings_test = pd.read_csv(os.path.join(path, f'Datasets/ml-100k/u1.test'), sep='\t', names=names)
+ratings_train = pd.read_csv(os.path.join(path, f'Datasets/ml-100k/u2.base'), sep='\t', names=names)
+ratings_test = pd.read_csv(os.path.join(path, f'Datasets/ml-100k/u2.test'), sep='\t', names=names)
 
 # merubah dataset menjadi data pivot
 rating_matrix_ = ratings_train.pivot_table(index='user_id', columns='item_id', values='rating').fillna(0)
@@ -160,20 +160,33 @@ result_rating_matrix_test=HTML(result_rating_matrix_test.to_html(classes='table 
 # ===================================================================================================
 # Item
 rating_matrix_T = rating_matrix.copy().T
-with open(os.path.join(path,  f'item_k11.pkl'), 'rb') as model_file:
-            item_mean_user, item_mean_center_user, item_similarity_user  = pickle.load(model_file)
+# with open(os.path.join(path,  'item_k2.pkl'), 'rb') as model_file:
+#             item_mean_user, item_mean_center_user, item_similarity_user  = pickle.load(model_file)
+# item_mean_user, item_mean_center_user, item_similarity_user = joblib.load(os.path.join(path,  'item_k2_ami.joblib'))
+item_mean_user, item_mean_center_user, item_similarity_user = joblib.load(os.path.join(path,  'ami', 'item_k2_ami.joblib'))
+
 item_mean_user = pd.DataFrame(item_mean_user, index=rating_matrix_T.index)
 item_mean_centered_user = pd.DataFrame(item_mean_center_user, index=rating_matrix_T.index, columns=rating_matrix_T.columns)
-item_similarity_user = pd.DataFrame(item_similarity_user, index=rating_matrix_T.index, columns=rating_matrix_T.index)
+item_similarity_user = pd.DataFrame(item_similarity_user, index=rating_matrix_T.columns, columns=rating_matrix_T.columns)
+# rating_matrix_T = rating_matrix.copy().T
+# with open(os.path.join(path,  f'item_k2.pkl'), 'rb') as model_file:
+#             item_mean_user, item_mean_center_user, item_similarity_user  = pickle.load(model_file)
+# item_mean_user = pd.DataFrame(item_mean_user, index=rating_matrix_T.index)
+# item_mean_centered_user = pd.DataFrame(item_mean_center_user, index=rating_matrix_T.index, columns=rating_matrix_T.columns)
+# item_similarity_user = pd.DataFrame(item_similarity_user, index=rating_matrix_T.index, columns=rating_matrix_T.index)
 
 
 # ===================================================================================================
 # USER
-with open(os.path.join(path,  f'user_k11.pkl'), 'rb') as model_file:
-            mean_user, mean_center_user, similarity_user  = pickle.load(model_file)
+mean_user, mean_center_user, similarity_user = joblib.load(os.path.join(path,  "ami", 'user_k2_ami.joblib'))
 mean_user = pd.DataFrame(mean_user, index=rating_matrix.index)
 mean_center_user = pd.DataFrame(mean_center_user, index=rating_matrix.index, columns=rating_matrix.columns)
 similarity_user = pd.DataFrame(similarity_user, index=rating_matrix.index, columns=rating_matrix.index)
+# with open(os.path.join(path,  f'user_k2.pkl'), 'rb') as model_file:
+#             mean_user, mean_center_user, similarity_user  = pickle.load(model_file)
+# mean_user = pd.DataFrame(mean_user, index=rating_matrix.index)
+# mean_center_user = pd.DataFrame(mean_center_user, index=rating_matrix.index, columns=rating_matrix.columns)
+# similarity_user = pd.DataFrame(similarity_user, index=rating_matrix.index, columns=rating_matrix.index)
 
 # EVALUASI
 def precision(ground_truth, topN, n=1):
@@ -259,17 +272,17 @@ def metode_page():
       if metod_user=="PCC":
             metode_usernya = "Pearson Correlation Coefficient (PCC)"
             # User
-            # with open(os.path.join(path,  f'user_k11.pkl'), 'rb') as model_file:
+            # with open(os.path.join(path,  f'user_k2.pkl'), 'rb') as model_file:
             #             mean_user, mean_center_user, similarity_user  = pickle.load(model_file)
-            # mean_user, mean_center_user, similarity_user = joblib.load(os.path.join(path,  f'user_k1_pcc.joblib'))
-            mean_user, mean_center_user, similarity_user = joblib.load(os.path.join(path,  "pcc", 'user_k1.joblib'))
+            # mean_user, mean_center_user, similarity_user = joblib.load(os.path.join(path,  f'user_k2_pcc.joblib'))
+            mean_user, mean_center_user, similarity_user = joblib.load(os.path.join(path,  "pcc", 'user_k2.joblib'))
             # mean_user = pd.DataFrame(mean_user, index=rating_matrix.index)
             # mean_center_user = pd.DataFrame(mean_center_user, index=rating_matrix.index, columns=rating_matrix.columns)
             # similarity_user = pd.DataFrame(similarity_user, index=rating_matrix.index, columns=rating_matrix.index)
       elif metod_user=="ITR":
             metode_usernya = "Improved Triangle Similarity (ITR)"
             # User
-            with open(os.path.join(path,  'user_k11.pkl'), 'rb') as model_file:
+            with open(os.path.join(path,  'user_k2.pkl'), 'rb') as model_file:
                         mean_user, mean_center_user, similarity_user  = pickle.load(model_file)
             mean_user = pd.DataFrame(mean_user, index=rating_matrix.index)
             mean_center_user = pd.DataFrame(mean_center_user, index=rating_matrix.index, columns=rating_matrix.columns)
@@ -277,18 +290,18 @@ def metode_page():
       elif metod_user=="AMI":
             metode_usernya = "Adjusted Mutual Information (AMI)"
             # User
-            # with open(os.path.join(path,  'user_k11.pkl'), 'rb') as model_file:
+            # with open(os.path.join(path,  'user_k2.pkl'), 'rb') as model_file:
             #             mean_user, mean_center_user, similarity_user  = pickle.load(model_file)
-            mean_user, mean_center_user, similarity_user = joblib.load(os.path.join(path,  "ami", 'user_k1.joblib'))
+            mean_user, mean_center_user, similarity_user = joblib.load(os.path.join(path,  "ami", 'user_k2_ami.joblib'))
             mean_user = pd.DataFrame(mean_user, index=rating_matrix.index)
             mean_center_user = pd.DataFrame(mean_center_user, index=rating_matrix.index, columns=rating_matrix.columns)
             similarity_user = pd.DataFrame(similarity_user, index=rating_matrix.index, columns=rating_matrix.index)
       else:
             metode_usernya = "Pearson Correlation Coefficient (PCC)"
             # User
-            # with open(os.path.join(path,  'user_k11.pkl'), 'rb') as model_file:
+            # with open(os.path.join(path,  'user_k2.pkl'), 'rb') as model_file:
             #             mean_user, mean_center_user, similarity_user  = pickle.load(model_file)
-            mean_user, mean_center_user, similarity_user = joblib.load(os.path.join(path,  "ami", 'user_k1.joblib'))
+            mean_user, mean_center_user, similarity_user = joblib.load(os.path.join(path,  "ami", 'user_k2_ami.joblib'))
             # mean_user = pd.DataFrame(mean_user, index=rating_matrix.index)
             # mean_center_user = pd.DataFrame(mean_center_user, index=rating_matrix.index, columns=rating_matrix.columns)
             # similarity_user = pd.DataFrame(similarity_user, index=rating_matrix.index, columns=rating_matrix.index)
@@ -298,10 +311,10 @@ def metode_page():
             metode_itemnya = "Pearson Correlation Coefficient (PCC)"
             # item
             rating_matrix_T = rating_matrix.copy().T
-            # with open(os.path.join(path,  'item_k11.pkl'), 'rb') as model_file:
+            # with open(os.path.join(path,  'item_k2.pkl'), 'rb') as model_file:
             #             item_mean_user, item_mean_center_user, item_similarity_user  = pickle.load(model_file)
-            item_mean_user, item_mean_center_user, item_similarity_user = joblib.load(os.path.join(path,  "pcc", 'item_k1.joblib'))
-            # mean_item_df_k1, mean_centered_item_df_k1, similarity_item_df_k1 = joblib.load(os.path.join(path,  'item_k1_itr.joblib'))
+            item_mean_user, item_mean_center_user, item_similarity_user = joblib.load(os.path.join(path,  "pcc", 'item_k2.joblib'))
+            # mean_item_df_k2, mean_centered_item_df_k2, similarity_item_df_k2 = joblib.load(os.path.join(path,  'item_k2_itr.joblib'))
             # item_mean_user = pd.DataFrame(item_mean_user, index=rating_matrix_T.index)
             # item_mean_centered_user = pd.DataFrame(item_mean_center_user, index=rating_matrix_T.index, columns=rating_matrix_T.columns)
             # item_similarity_user = pd.DataFrame(item_similarity_user, index=rating_matrix_T.columns, columns=rating_matrix_T.columns)
@@ -309,9 +322,9 @@ def metode_page():
             metode_itemnya = "Improved Triangle Similarity (ITR)"
             # item
             rating_matrix_T = rating_matrix.copy().T
-            with open(os.path.join(path,  'item_k11.pkl'), 'rb') as model_file:
+            with open(os.path.join(path,  'item_k2.pkl'), 'rb') as model_file:
                         item_mean_user, item_mean_center_user, item_similarity_user  = pickle.load(model_file)
-            # mean_item_df_k1, mean_centered_item_df_k1, similarity_item_df_k1 = joblib.load(os.path.join(path,  'item_k1_itr.joblib'))
+            # mean_item_df_k2, mean_centered_item_df_k2, similarity_item_df_k2 = joblib.load(os.path.join(path,  'item_k2_itr.joblib'))
             item_mean_user = pd.DataFrame(item_mean_user, index=rating_matrix_T.index)
             item_mean_centered_user = pd.DataFrame(item_mean_center_user, index=rating_matrix_T.index, columns=rating_matrix_T.columns)
             item_similarity_user = pd.DataFrame(item_similarity_user, index=rating_matrix_T.index, columns=rating_matrix_T.index)
@@ -319,10 +332,10 @@ def metode_page():
             metode_itemnya = "Adjusted Mutual Information (AMI)"
             # item
             rating_matrix_T = rating_matrix.copy().T
-            # with open(os.path.join(path,  'item_k11.pkl'), 'rb') as model_file:
+            # with open(os.path.join(path,  'item_k2.pkl'), 'rb') as model_file:
             #             item_mean_user, item_mean_center_user, item_similarity_user  = pickle.load(model_file)
-            # item_mean_user, item_mean_center_user, item_similarity_user = joblib.load(os.path.join(path,  'item_k1_ami.joblib'))
-            item_mean_user, item_mean_center_user, item_similarity_user = joblib.load(os.path.join(path,  'ami', 'item_k1_ami.joblib'))
+            # item_mean_user, item_mean_center_user, item_similarity_user = joblib.load(os.path.join(path,  'item_k2_ami.joblib'))
+            item_mean_user, item_mean_center_user, item_similarity_user = joblib.load(os.path.join(path,  'ami', 'item_k2_ami.joblib'))
 
             item_mean_user = pd.DataFrame(item_mean_user, index=rating_matrix_T.index)
             item_mean_centered_user = pd.DataFrame(item_mean_center_user, index=rating_matrix_T.index, columns=rating_matrix_T.columns)
@@ -331,9 +344,9 @@ def metode_page():
             metode_itemnya = "Pearson Correlation Coefficient (PCC)"
             # Item
             rating_matrix_T = rating_matrix.copy().T
-            # with open(os.path.join(path,  'item_k11.pkl'), 'rb') as model_file:
+            # with open(os.path.join(path,  'item_k2.pkl'), 'rb') as model_file:
             #             item_mean_user, item_mean_center_user, item_similarity_user  = pickle.load(model_file)
-            item_mean_user, item_mean_center_user, item_similarity_user = joblib.load(os.path.join(path,  "ami", 'item_k1_ami.joblib'))
+            item_mean_user, item_mean_center_user, item_similarity_user = joblib.load(os.path.join(path,  "ami", 'item_k2_ami.joblib'))
             # item_mean_user = pd.DataFrame(item_mean_user, index=rating_matrix_T.index)
             # item_mean_centered_user = pd.DataFrame(item_mean_center_user, index=rating_matrix_T.index, columns=rating_matrix_T.columns)
             # item_similarity_user = pd.DataFrame(item_similarity_user, index=rating_matrix_T.columns, columns=rating_matrix_T.columns)
@@ -480,7 +493,7 @@ def rekomendasi_page():
       hybrid_topn.sort(reverse=True)
 
       recomendations = []
-      # gt = ratings_test_k1[ratings_test_k1['user_id'] == id_user].loc[:,'item_id'].tolist()
+      # gt = ratings_test_k2[ratings_test_k2['user_id'] == id_user].loc[:,'item_id'].tolist()
       # topN = hybrid_toy_data[(-hybrid_toy_data[:, 1].astype(float)).argsort()][:,0]
       # evTopN = [[],[],[],[]]
       # for n in range(1, 101):
@@ -684,7 +697,7 @@ def metrik_evaluasi_page():
       hybrid_topn.sort(reverse=True)
 
       recomendations = []
-      # gt = ratings_test_k1[ratings_test_k1['user_id'] == id_user].loc[:,'item_id'].tolist()
+      # gt = ratings_test_k2[ratings_test_k2['user_id'] == id_user].loc[:,'item_id'].tolist()
       # topN = hybrid_toy_data[(-hybrid_toy_data[:, 1].astype(float)).argsort()][:,0]
       # evTopN = [[],[],[],[]]
       # for n in range(1, 101):
